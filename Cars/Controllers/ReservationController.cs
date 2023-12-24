@@ -9,19 +9,17 @@ namespace Cars.Controllers
 {
     public class ReservationController : Controller
     {
-        private readonly ReservationsDbContex _reservationsContext;
-        private readonly CarsDbContex _carsContext;
+        private readonly AppDbContext _context;
 
-        public ReservationController(ReservationsDbContex reservationsContext, CarsDbContex carsContext)
+        public ReservationController(AppDbContext context)
         {
-            _reservationsContext = reservationsContext;
-            _carsContext = carsContext;
+            _context = context;
         }
 
         // GET: Reservation
         public IActionResult Index()
         {
-            return View(_reservationsContext.Reservations);
+            return View(_context.Reservations);
         }
 
         public IActionResult Reserve(int carId, string carName)
@@ -29,11 +27,7 @@ namespace Cars.Controllers
             ViewBag.CarId = carId;
             ViewBag.CarName = carName;
 
-            System.Diagnostics.Debug.WriteLine("LALAALALALLALAWAWAWAWA");
-            System.Diagnostics.Debug.WriteLine(carId);
-
-            var reservationsForCar = _reservationsContext.Reservations
-                .Include(r => r.Car)
+            var reservationsForCar = _context.Reservations
                 .Where(r => r.CarId == carId)
                 .ToList();
 
@@ -49,7 +43,6 @@ namespace Cars.Controllers
             var newReservation = new Reservation
             {
                 CarId = carId,
-                ReservationDate = DateTime.Now,
                 PickupDate = DateTime.Now,
                 ReturnDate = DateTime.Now.AddHours(1)
             };
@@ -62,51 +55,51 @@ namespace Cars.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Reservation reservation)
         {
-            var car = _carsContext.Cars.FirstOrDefault(c => c.Id == reservation.CarId);
-            System.Diagnostics.Debug.WriteLine("LALAALALALLALA");
-            System.Diagnostics.Debug.WriteLine(car);
-            System.Diagnostics.Debug.WriteLine(car.Brand);
-            reservation.Car = car;
+            int carId = reservation.CarId;
+            var car = _context.Cars.FirstOrDefault(c => c.Id == carId);
+            string carName = car.Brand + " " + car.Model;
 
+            reservation.ReservationDate= DateTime.Now;
 
-            System.Diagnostics.Debug.WriteLine("REZERWACJA");
-            System.Diagnostics.Debug.WriteLine(reservation.Car);
-            // Check for overlapping reservations
-            bool isOverlapping = _reservationsContext.Reservations.Any(r =>
-                r.CarId == reservation.CarId &&
-                ((r.PickupDate <= reservation.PickupDate && r.ReturnDate > reservation.PickupDate) ||
-                 (r.PickupDate < reservation.ReturnDate && r.ReturnDate >= reservation.ReturnDate)));
+            bool isOverlapping = _context.Reservations.Any(r =>
+            r.CarId == carId && !(r.PickupDate >= reservation.ReturnDate || r.ReturnDate <= reservation.PickupDate));
 
             if (isOverlapping)
             {
-                System.Diagnostics.Debug.WriteLine("overlap");
                 ModelState.AddModelError("", "There is already a reservation for the selected car in this time period.");
             }
 
             if (ModelState.IsValid)
             {
-                _reservationsContext.Reservations.Add(reservation);
-                _reservationsContext.SaveChanges();
-                System.Diagnostics.Debug.WriteLine("hahaha");
-                return RedirectToAction("Index");
-            }
-            var errors = new StringBuilder();
-            foreach (var modelState in ViewData.ModelState.Values)
-            {
-                foreach (var error in modelState.Errors)
-                {
-                    errors.AppendLine(error.ErrorMessage);
-                    // You can also log the errors
-                    // Debug.WriteLine(error.ErrorMessage);
+                _context.Reservations.Add(reservation);
+                _context.SaveChanges();
+                return RedirectToAction("Reserve", new { carId = carId, carName = carName });
                 }
+            else
+            {
+                foreach (var state in ModelState)
+                {
+                    foreach (var error in state.Value.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Key: {state.Key}, Error: {error.ErrorMessage}");
+                    }
+                }
+                ViewBag.CarId = carId;
+                ViewBag.CarName = carName;
+
+                return View(reservation);
             }
-            System.Diagnostics.Debug.WriteLine("dadadada");
-            System.Diagnostics.Debug.WriteLine(errors);
-            System.Diagnostics.Debug.WriteLine(ModelState.ErrorCount);
-            System.Diagnostics.Debug.WriteLine(ModelState);
-            System.Diagnostics.Debug.WriteLine(ModelState.IsValid);
-            System.Diagnostics.Debug.WriteLine(ModelState.ToString());
-            return View(reservation);
+        }
+
+        [HttpGet]
+        public JsonResult CheckForOverlap(int carId, DateTime pickupDate, DateTime returnDate)
+        {
+            bool isOverlapping = _context.Reservations.Any(r =>
+                r.CarId == carId &&
+                ((r.PickupDate <= pickupDate && r.ReturnDate > pickupDate) ||
+                 (r.PickupDate < returnDate && r.ReturnDate >= returnDate)));
+
+            return Json(isOverlapping);
         }
 
     }

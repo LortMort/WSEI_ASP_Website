@@ -11,11 +11,11 @@
 <h2>Create Reservation</h2>
 <h2>@carName</h2>
 
-@using (Html.BeginForm("Create", "Reservation", FormMethod.Post, new { id = "reservationForm" }))
+@using (Html.BeginForm("Create", "Reservation", FormMethod.Post, new { id = "reservationForm"}))
 {
     @Html.AntiForgeryToken()
 
-    @Html.Hidden("CarId", (object)carId)
+    @Html.HiddenFor(model => model.CarId)
     <div class="form-group">
         <label asp-for="CustomerName" class="control-label"></label>
         <input asp-for="CustomerName" class="form-control" />
@@ -26,15 +26,25 @@
         <input asp-for="PickupDate" type="datetime-local" class="form-control" id="pickupDate" />
         <span asp-validation-for="PickupDate" class="text-danger"></span>
     </div>
-
     <div class="form-group">
         <label asp-for="ReturnDate">Return Date</label>
         <input asp-for="ReturnDate" type="datetime-local" class="form-control" id="returnDate" />
         <span asp-validation-for="ReturnDate" class="text-danger"></span>
     </div>
 
-
     <button type="submit" class="btn btn-primary">Create Reservation</button>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        // Check if general errors exist
+        if (ViewData.ModelState[""] != null && ViewData.ModelState[""].Errors.Count > 0)
+        {
+            <div class="alert alert-danger">
+                @Html.ValidationSummary(true, "Please correct the errors and try again.")
+            </div>
+        }
+    }
+    <div id="formError" class="alert alert-danger" style="display: none;">
+    </div>
 }
 <div>
     <a asp-action="Index">Back to List</a>
@@ -90,26 +100,51 @@
             adjustDateTime(this);
         });
 
-        // Validation for return and pickup date
-        document.getElementById('reservationForm').addEventListener('submit', function(event) {
-        var pickupDate = new Date(document.getElementById('pickupDate').value);
+        function handleFormSubmit(event) {
+            event.preventDefault(); // Prevent the form from submitting immediately
+
+            var pickupDate = new Date(document.getElementById('pickupDate').value);
             var returnDate = new Date(document.getElementById('returnDate').value);
             var now = new Date();
-            now.setSeconds(0, 0); // Ignore seconds and milliseconds
+
+            // Hide previous error messages
+            var formErrorDiv = $('#formError');
+            formErrorDiv.hide().text('');
 
             // Check if return date is later than pickup date
             if (returnDate <= pickupDate) {
-                alert("Return date must be later than pickup date.");
-                event.preventDefault();
+                formErrorDiv.text("Return date must be later than pickup date.").show();
                 return;
             }
 
             // Check if both dates are later than the current time
             if (pickupDate < now || returnDate < now) {
-                alert("Reservation dates must be in the future.");
-                event.preventDefault();
+                formErrorDiv.text("Reservation dates must be in the future.").show();
                 return;
             }
-        });
+
+            var carId = @ViewBag.CarId;
+            var pickupDateISO = pickupDate.toISOString();
+            var returnDateISO = returnDate.toISOString();
+
+            // Use jQuery to perform an AJAX GET request
+            $.get('@Url.Action("CheckForOverlap", "Reservation")', { carId: carId, pickupDate: pickupDateISO, returnDate: returnDateISO })
+                .done(function (isOverlapping) {
+                    if (isOverlapping) {
+                        formErrorDiv.text('There is already a reservation for the selected car in this time period.').show();
+                    } else {
+                        // If no overlap, submit the form
+                        document.getElementById('reservationForm').removeEventListener('submit', handleFormSubmit);
+                        document.getElementById('reservationForm').submit();
+                    }
+                })
+                .fail(function () {
+                    formErrorDiv.text('Error checking for reservation overlap. Please try again.').show();
+                });
+        }
+
+        // Attach the event listener to the form's submit event
+        document.getElementById('reservationForm').addEventListener('submit', handleFormSubmit);
+
     </script>
 }

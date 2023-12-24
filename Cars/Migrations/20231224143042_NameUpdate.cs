@@ -4,7 +4,7 @@
 
 namespace Cars.Migrations
 {
-    public partial class RecreateDatabase2 : Migration
+    public partial class NameUpdate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using Cars.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,9 +10,8 @@ namespace Cars.Models
         [Key]
         public int ReservationId { get; set; }
 
-        [ForeignKey("Car")]
+        [ForeignKey("CarId")]
         public int CarId { get; set; }
-        public Car Car { get; set; }
 
         [Column(TypeName = "varchar(255)")]
         public string CustomerName { get; set; }

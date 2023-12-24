@@ -4,7 +4,7 @@
 
 namespace Cars.Migrations
 {
-    public partial class UpdateCarType : Migration
+    public partial class InitalCreateNew : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
