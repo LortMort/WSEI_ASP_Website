@@ -1,23 +1,18 @@
 ﻿@model IEnumerable<Cars.Models.Reservation>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Reservation";
+}
+@{
+    var carId = ViewBag.CarId;
+    var carName = ViewBag.CarName;
 }
 
-<h1>Index</h1>
+<h2>@ViewBag.CarName</h2>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CarId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CustomerName)
-            </th>
             <th>
                 @Html.DisplayNameFor(model => model.ReservationDate)
             </th>
@@ -34,12 +29,6 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CarId)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CustomerName)
-                </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.ReservationDate)
                 </td>
@@ -58,3 +47,5 @@
         }
     </tbody>
 </table>
+@Html.ActionLink("Create", "Create", new { carId = carId, carName = carName }, new { @class = "btn btn-success" })
+

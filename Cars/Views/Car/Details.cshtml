@@ -45,7 +45,6 @@
 <div>
     @Html.ActionLink("Edit", "Edit", new {  id = Model.Id  }) |
     <a asp-action="Index">Back to List</a>
-    <a asp-controller="Reservation" asp-action="Reserve" asp-route-carId="@Model.Id">
-    Reserve
-    </a>
+    <br/>
+    @Html.ActionLink("Reserve", "Reserve", "Reservation", new { id = @Model.Id, carName = @Model.Brand + " " + @Model.Model  }, new { @class = "btn btn-success" })
 </div>

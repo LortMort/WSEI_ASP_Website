@@ -1,0 +1,115 @@
+﻿@model Cars.Models.Reservation
+
+@{
+    ViewData["Title"] = "Create Reservation";
+}
+@{
+    var carId = ViewBag.CarId;
+    var carName = ViewBag.CarName;
+}
+
+<h2>Create Reservation</h2>
+<h2>@carName</h2>
+
+@using (Html.BeginForm("Create", "Reservation", FormMethod.Post, new { id = "reservationForm" }))
+{
+    @Html.AntiForgeryToken()
+
+    @Html.Hidden("CarId", (object)carId)
+    <div class="form-group">
+        <label asp-for="CustomerName" class="control-label"></label>
+        <input asp-for="CustomerName" class="form-control" />
+        <span asp-validation-for="CustomerName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="PickupDate">Pickup Date</label>
+        <input asp-for="PickupDate" type="datetime-local" class="form-control" id="pickupDate" />
+        <span asp-validation-for="PickupDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ReturnDate">Return Date</label>
+        <input asp-for="ReturnDate" type="datetime-local" class="form-control" id="returnDate" />
+        <span asp-validation-for="ReturnDate" class="text-danger"></span>
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Create Reservation</button>
+}
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function adjustDateTime(input) {
+            // Ensure the input value is in the correct format
+            var value = input.value;
+            if (!value) {
+                return; // Do nothing if the value is empty
+            }
+
+            // Parse the date and time from the input value
+            var parts = value.split("T");
+            var datePart = parts[0];
+            var timePart = parts[1];
+
+            if (datePart && timePart) {
+                var timeComponents = timePart.split(":");
+                var hours = parseInt(timeComponents[0]);
+                var minutes = parseInt(timeComponents[1]);
+
+                // Round the minutes to the nearest quarter-hour
+                minutes = Math.round(minutes / 15) * 15;
+                if (minutes === 60) {
+                    // Handle case where rounding leads to 60 minutes
+                    minutes = 0;
+                    hours = (hours + 1) % 24;
+                }
+
+                // Reconstruct the time string
+                var adjustedTime = ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2);
+
+                // Update the input value
+                input.value = datePart + "T" + adjustedTime;
+            }
+        }
+
+        adjustDateTime(document.getElementById('pickupDate'))
+        adjustDateTime(document.getElementById('returnDate'))
+
+        document.getElementById('pickupDate').addEventListener('change', function () {
+            adjustDateTime(this);
+        });
+
+
+        document.getElementById('returnDate').addEventListener('change', function () {
+            adjustDateTime(this);
+        });
+
+        // Validation for return and pickup date
+        document.getElementById('reservationForm').addEventListener('submit', function(event) {
+        var pickupDate = new Date(document.getElementById('pickupDate').value);
+            var returnDate = new Date(document.getElementById('returnDate').value);
+            var now = new Date();
+            now.setSeconds(0, 0); // Ignore seconds and milliseconds
+
+            // Check if return date is later than pickup date
+            if (returnDate <= pickupDate) {
+                alert("Return date must be later than pickup date.");
+                event.preventDefault();
+                return;
+            }
+
+            // Check if both dates are later than the current time
+            if (pickupDate < now || returnDate < now) {
+                alert("Reservation dates must be in the future.");
+                event.preventDefault();
+                return;
+            }
+        });
+    </script>
+}

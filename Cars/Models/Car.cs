@@ -23,7 +23,7 @@ namespace Cars.Models
         public string Model { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string Type { get; set; }
+        public CarTypes Type { get; set; }
 
         [Column(TypeName = "int")]
         public int Power { get; set; }
