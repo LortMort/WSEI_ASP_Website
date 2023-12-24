@@ -13,10 +13,10 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Marka)
+                @Html.DisplayNameFor(model => model.Brand)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Nazwa)
+                @Html.DisplayNameFor(model => model.Model)
             </th>
             <th></th>
         </tr>
@@ -25,15 +25,16 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Marka)
+                @Html.DisplayFor(modelItem => item.Brand)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Nazwa)
+                 @Html.DisplayFor(modelItem => item.Model)
             </td>
             <td>
                 @Html.ActionLink("Edit", "Edit", new {  id=item.Id  }) |
                 @Html.ActionLink("Details", "Details", new { id=item.Id }) |
-                @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+                @Html.ActionLink("Delete", "Delete", new { id=item.Id }) |
+                @Html.ActionLink("Reserve", "Reserve", "Reservation", new { id = item.Id }, null)
             </td>
         </tr>
 }

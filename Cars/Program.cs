@@ -1,3 +1,6 @@
+using Cars.Models;
+using Microsoft.EntityFrameworkCore;
+
 namespace Cars
 {
     public class Program
@@ -8,6 +11,8 @@ namespace Cars
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddDbContext<CarsDbContex>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DevConnection")));
+            builder.Services.AddDbContext<ReservationsDbContex>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DevConnection")));
 
             var app = builder.Build();
 

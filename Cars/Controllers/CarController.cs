@@ -2,27 +2,28 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using System.Diagnostics;
 
 namespace Cars.Controllers
 {
     public class CarController : Controller
     {
-        private static IList<Car> cars = new List<Car>
+        private readonly CarsDbContex _contex;
+        public CarController(CarsDbContex contex)
         {
-            new Car() {Id=1, Marka="BMW", Nazwa="E60", Moc=200},
-            new Car() {Id=2, Marka="Audi", Nazwa="TT", Moc=175},
-            new Car() {Id=3, Marka="Mazda", Nazwa="MX-5", Moc=115}
-        };
+            _contex = contex;
+        }
+
         // GET: CarController
         public ActionResult Index()
         {
-            return View(cars);
+            return View(_contex.Cars);
         }
 
         // GET: CarController/Details/5
         public ActionResult Details(int id)
         {
-            return View(cars.FirstOrDefault(x => x.Id == id));
+            return View(_contex.Cars.Find(id));
         }
 
         // GET: CarController/Create
@@ -36,33 +37,37 @@ namespace Cars.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Car car)
         {
-            car.Id = cars.Count + 1;
-            cars.Add(car);
+            _contex.Cars.Add(car);
+            _contex.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
 
         // GET: CarController/Edit/5
         public ActionResult Edit(int id)
         {
-            return View(cars.FirstOrDefault(x => x.Id == id));
+            return View(_contex.Cars.Find(id));
         }
 
         // POST: CarController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Car car)
+        public ActionResult Edit(int id, Car car)
         {
-            Car EditCar = cars.FirstOrDefault(x => x.Id == car.Id);
-            EditCar.Marka = car.Marka;
-            EditCar.Nazwa = car.Nazwa;
-            EditCar.Moc = car.Moc;
+            var CarToEdit = _contex.Cars.Find(id);
+            CarToEdit.Brand = car.Brand;
+            CarToEdit.Model = car.Model;
+            CarToEdit.Type = car.Type;
+            CarToEdit.Power = car.Power;
+            CarToEdit.Avalibity = car.Avalibity;
+            _contex.Update(CarToEdit);
+            _contex.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
 
         // GET: CarController/Delete/5
         public ActionResult Delete(int id)
         {
-            return View(cars.FirstOrDefault(x => x.Id == id));
+            return View(_contex.Cars.Find(id));
         }
 
         // POST: CarController/Delete/5
@@ -70,8 +75,9 @@ namespace Cars.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(Car car)
         {
-            Car CarToDelte = cars.FirstOrDefault(x => x.Id == car.Id);
-            cars.Remove(CarToDelte);
+            var CarToRemove = _contex.Cars.Find(car.Id);
+            _contex.Cars.Remove(CarToRemove);
+            _contex.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
     }
