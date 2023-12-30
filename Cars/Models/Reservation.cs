@@ -12,6 +12,7 @@ namespace Cars.Models
 
         [ForeignKey("CarId")]
         public int CarId { get; set; }
+        public virtual Car? Car { get; set; }
 
         [Column(TypeName = "varchar(255)")]
         public string CustomerName { get; set; }
@@ -26,6 +27,11 @@ namespace Cars.Models
         [Column(TypeName = "datetime")]
         [CustomValidation(typeof(Reservation), nameof(ValidateReturnDate))]
         public DateTime ReturnDate { get; set; }
+
+        public string? UserId { get; set; }
+
+        [ForeignKey("UserId")]
+        public virtual ApplicationUser? User { get; set; }
 
         public static ValidationResult ValidatePickupDate(DateTime pickupDate)
         {

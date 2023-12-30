@@ -47,5 +47,19 @@
         }
     </tbody>
 </table>
-@Html.ActionLink("Create", "Create", new { carId = carId, carName = carName }, new { @class = "btn btn-success" })
+@if (User.Identity.IsAuthenticated)
+{
+        @Html.ActionLink("Create", "Create", new { carId = carId, carName = carName }, new { @class = "btn btn-success" })
+}
+else
+{
+    <button type="button" class="btn btn-secondary" disabled>Reserve</button>
+    <p>
+        You can't create a reservation. First, you must 
+        <a href="@Url.Page("/Account/Login", new { area = "Identity" })">login</a> 
+            or 
+        <a href="@Url.Page("/Account/Register", new { area = "Identity" })">register an account</a>.
+    </p>
+}
+
 
