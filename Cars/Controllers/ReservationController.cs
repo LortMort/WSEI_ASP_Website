@@ -1,5 +1,6 @@
 ﻿using Cars.Migrations;
 using Cars.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,20 +32,22 @@ namespace Cars.Controllers
             ViewBag.CarId = carId;
             ViewBag.CarName = carName;
 
+            var now = DateTime.Today; // Current date and time
+            var oneWeekLater = DateTime.Today.AddDays(8);
+            System.Diagnostics.Debug.WriteLine(DateTime.Today);
+
             var reservationsForCar = await _context.Reservations
-                                 .Include(r => r.Car)
-                                 .Where(r => r.CarId == carId)
-                                 .ToListAsync();
-
-
-            //var reservationsForCar = _context.Reservations
-                //.Where(r => r.CarId == carId)
-               // .ToList();
+                                          .Include(r => r.Car)
+                                          .Where(r => r.CarId == carId
+                                                      && r.ReturnDate >= now
+                                                      && r.ReturnDate < oneWeekLater)
+                                          .ToListAsync();
 
             return View(reservationsForCar);
         }
 
         // GET: ReservationController/Create
+        [Authorize]
         public ActionResult Create(int carId, string carName)
         {
             ViewBag.CarName = carName;
@@ -62,6 +65,7 @@ namespace Cars.Controllers
 
         // POST: ReservationController/Create
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Reservation reservation)
         {
@@ -69,12 +73,14 @@ namespace Cars.Controllers
             var car = _context.Cars.FirstOrDefault(c => c.Id == carId);
             string carName = car.Brand + " " + car.Model;
 
+            reservation.CustomerName = _userManager.GetUserName(User);
             reservation.UserId = _userManager.GetUserId(User);
             reservation.ReservationDate = DateTime.Now;
             reservation.Car = car;
 
             bool isOverlapping = _context.Reservations.Any(r =>
-            r.CarId == carId && !(r.PickupDate >= reservation.ReturnDate || r.ReturnDate <= reservation.PickupDate));
+            r.CarId == carId && ((reservation.PickupDate < r.ReturnDate && reservation.PickupDate >= r.PickupDate) ||
+            (reservation.ReturnDate < r.ReturnDate && reservation.ReturnDate >= r.PickupDate)));
 
             if (isOverlapping)
             {
@@ -85,17 +91,10 @@ namespace Cars.Controllers
             {
                 _context.Reservations.Add(reservation);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("MyReservations",new {_context.Reservations });
+                return RedirectToAction("MyReservations");
                 }
             else
             {
-                foreach (var state in ModelState)
-                {
-                    foreach (var error in state.Value.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Key: {state.Key}, Error: {error.ErrorMessage}");
-                    }
-                }
                 ViewBag.CarId = carId;
                 ViewBag.CarName = carName;
 
@@ -103,27 +102,82 @@ namespace Cars.Controllers
             }
         }
 
+        [Authorize]
         public async Task<IActionResult> MyReservations()
         {
             var userId = _userManager.GetUserId(User); // Get the current user's ID
-            var reservations = await _context.Reservations
-                                             .Where(r => r.UserId == userId)
-                                             .ToListAsync();
+            var now = DateTime.Now; // Current date and time
 
-            return View(reservations);
+            var upcomingReservations = await _context.Reservations
+                                                     .Include(r => r.Car)
+                                                     .Where(r => r.UserId == userId && r.PickupDate >= now)
+                                                     .OrderBy(r => r.PickupDate) // Ordering by date might be helpful
+                                                     .ToListAsync();
+
+            var pastReservations = await _context.Reservations
+                                                 .Include(r => r.Car)
+                                                 .Where(r => r.UserId == userId && r.PickupDate < now)
+                                                 .OrderByDescending(r => r.PickupDate) // Ordering by date in descending order
+                                                 .ToListAsync();
+
+            var model = new MyReservationsViewModel
+            {
+                UpcomingReservations = upcomingReservations,
+                PastReservations = pastReservations
+            };
+
+            return View(model);
         }
 
         [HttpGet]
         public JsonResult CheckForOverlap(int carId, DateTime pickupDate, DateTime returnDate)
         {
             bool isOverlapping = _context.Reservations.Any(r =>
-            r.CarId == carId && !(r.PickupDate >= returnDate || r.ReturnDate <= pickupDate));
-            //bool isOverlapping = _context.Reservations.Any(r =>
-            //r.CarId == carId &&
-            //((r.PickupDate <= pickupDate && r.ReturnDate > pickupDate) ||
-            // (r.PickupDate < returnDate && r.ReturnDate >= returnDate)));
+            r.CarId == carId && ((pickupDate < r.ReturnDate && pickupDate >= r.PickupDate) ||
+            (returnDate < r.ReturnDate && returnDate >= r.PickupDate)));
 
             return Json(isOverlapping);
+        }
+
+        [Authorize]
+        public ActionResult Delete(int ReservationId)
+        {
+            var reservationToDelete = _context.Reservations
+                                              .Include(r => r.Car)
+                                              .FirstOrDefault(r => r.ReservationId == ReservationId);
+
+            var currentUserId = _userManager.GetUserId(User);
+            if (reservationToDelete.UserId != currentUserId)
+            {
+                System.Diagnostics.Debug.WriteLine($"Unauthorized delete attempt by user {currentUserId} on reservation {ReservationId}");
+                return Unauthorized();
+            }
+
+            return View(reservationToDelete);
+        }
+
+        // POST: ReservationController/Delete/5
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(Reservation reservation)
+        {
+            var ReservationToRemove = _context.Reservations.Find(reservation.ReservationId);
+            _context.Reservations.Remove(ReservationToRemove);
+            _context.SaveChanges();
+            return RedirectToAction(nameof(MyReservations));
+        }
+
+        // GET: ReservationController/Details/5
+        public ActionResult Details(int ReservationId)
+        {
+            var reservationToInspect = _context.Reservations
+                                                .Include(r => r.Car)
+                                                .Include(r => r.User)
+                                                .FirstOrDefault(r => r.ReservationId == ReservationId);
+            System.Diagnostics.Debug.WriteLine(reservationToInspect);
+
+            return View(reservationToInspect);
         }
 
     }

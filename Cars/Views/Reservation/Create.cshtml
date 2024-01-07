@@ -17,11 +17,6 @@
 
     @Html.HiddenFor(model => model.CarId)
     <div class="form-group">
-        <label asp-for="CustomerName" class="control-label"></label>
-        <input asp-for="CustomerName" class="form-control" />
-        <span asp-validation-for="CustomerName" class="text-danger"></span>
-    </div>
-    <div class="form-group">
         <label asp-for="PickupDate">Pickup Date</label>
         <input asp-for="PickupDate" type="datetime-local" class="form-control" id="pickupDate" />
         <span asp-validation-for="PickupDate" class="text-danger"></span>
@@ -47,7 +42,7 @@
     </div>
 }
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Reserve" asp-route-carId="@ViewBag.CarId" asp-route-carName="@ViewBag.CarName">Back to List</a>
 </div>
 
 @section Scripts {
@@ -106,6 +101,9 @@
             var pickupDate = new Date(document.getElementById('pickupDate').value);
             var returnDate = new Date(document.getElementById('returnDate').value);
             var now = new Date();
+            var weekLater = new Date();
+            weekLater.setDate(now.getDate() + 7);
+            weekLater.setHours(23, 59, 59, 999);
 
             // Hide previous error messages
             var formErrorDiv = $('#formError');
@@ -120,6 +118,12 @@
             // Check if both dates are later than the current time
             if (pickupDate < now || returnDate < now) {
                 formErrorDiv.text("Reservation dates must be in the future.").show();
+                return;
+            }
+
+            // Check if both dates are within a week from now
+            if (returnDate > weekLater || pickupDate > weekLater) {
+                formErrorDiv.text("Return date must be no further than a week from today.").show();
                 return;
             }
 

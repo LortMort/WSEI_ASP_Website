@@ -2,8 +2,8 @@
 
 @{
     ViewData["Title"] = "Reservation";
-}
-@{
+
+    var isAdmin = User.IsInRole("Admin");
     var carId = ViewBag.CarId;
     var carName = ViewBag.CarName;
 }
@@ -39,9 +39,12 @@
                     @Html.DisplayFor(modelItem => item.ReturnDate)
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.ReservationId">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.ReservationId">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.ReservationId">Delete</a>
+                @if (isAdmin)
+                {
+                    @Html.ActionLink("Edit", "Edit", new {  id=item.ReservationId  }, new { @class = "btn btn-warning btn-margin-right" })
+                    @Html.ActionLink("Details", "Details", new { ReservationId=item.ReservationId }, new { @class = "btn btn-info btn-margin-right" })
+                    @Html.ActionLink("Delete", "Delete", new { ReservationId=item.ReservationId }, new { @class = "btn btn-danger" })
+                }
                 </td>
             </tr>
         }
@@ -49,7 +52,7 @@
 </table>
 @if (User.Identity.IsAuthenticated)
 {
-        @Html.ActionLink("Create", "Create", new { carId = carId, carName = carName }, new { @class = "btn btn-success" })
+        @Html.ActionLink("Reserve", "Create", new { carId = carId, carName = carName }, new { @class = "btn btn-success" })
 }
 else
 {

@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Details";
+    var isAdmin = User.IsInRole("Admin");
 }
 
 <h1>Details</h1>
@@ -10,12 +11,6 @@
     <h4>Car</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Id)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Brand)
         </dt>
@@ -43,8 +38,13 @@
     </dl>
 </div>
 <div>
-    @Html.ActionLink("Edit", "Edit", new {  id = Model.Id  }) |
     <a asp-action="Index">Back to List</a>
-    <br/>
-    @Html.ActionLink("Reserve", "Reserve", "Reservation", new { id = @Model.Id, carName = @Model.Brand + " " + @Model.Model  }, new { @class = "btn btn-success" })
+    <br />
+    @if (isAdmin)
+    {
+        @Html.ActionLink("Edit", "Edit", new { carId = Model.Id  }, new { @class = "btn btn-warning btn-margin-right" })
+        @Html.ActionLink("Delete", "Delete", new { carId=Model.Id }, new { @class = "btn btn-danger" })
+        <br />
+    }
+    @Html.ActionLink("Reserve", "Reserve", "Reservation", new { carId = Model.Id, carName = Model.Brand + " " + Model.Model  }, new { @class = "btn btn-success" })
 </div>

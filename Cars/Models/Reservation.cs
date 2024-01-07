@@ -12,10 +12,10 @@ namespace Cars.Models
 
         [ForeignKey("CarId")]
         public int CarId { get; set; }
-        public virtual Car? Car { get; set; }
+        public Car? Car { get; set; }
 
         [Column(TypeName = "varchar(255)")]
-        public string CustomerName { get; set; }
+        public string? CustomerName { get; set; }
 
         [Column(TypeName = "datetime")]
         public DateTime ReservationDate { get; set; }
@@ -31,24 +31,39 @@ namespace Cars.Models
         public string? UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public virtual ApplicationUser? User { get; set; }
+        public ApplicationUser? User { get; set; }
 
-        public static ValidationResult ValidatePickupDate(DateTime pickupDate)
+        public static ValidationResult ValidatePickupDate(DateTime pickupDate, ValidationContext context)
         {
             if (pickupDate < DateTime.Now)
             {
                 return new ValidationResult("Pickup date must be in the future.");
             }
+
+            if (pickupDate.Date > DateTime.Today.AddDays(7))
+            {
+                return new ValidationResult("Pickup date must be no further than week forward.");
+            }
+
             return ValidationResult.Success;
         }
 
         public static ValidationResult ValidateReturnDate(DateTime returnDate, ValidationContext context)
         {
             var instance = context.ObjectInstance as Reservation;
-            if (instance != null && returnDate <= instance.PickupDate)
+            if (instance != null)
             {
-                return new ValidationResult("Return date must be later than pickup date.");
+                if (returnDate <= instance.PickupDate)
+                {
+                    return new ValidationResult("Return date must be later than pickup date.");
+                }
+
+                if (returnDate.Date > DateTime.Today.AddDays(7))
+                {
+                    return new ValidationResult("Return date must be no further than week forward.");
+                }
             }
+
             return ValidationResult.Success;
         }
     }

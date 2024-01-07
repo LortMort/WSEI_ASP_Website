@@ -15,16 +15,22 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace Cars.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(
+            SignInManager<ApplicationUser> signInManager,
+            ILogger<LoginModel> logger,
+            UserManager<ApplicationUser> userManager)
         {
+            _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
         }
@@ -110,22 +116,40 @@ namespace Cars.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
+                var user = await _userManager.FindByEmailAsync(Input.Email);
+                if (user != null)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
-                }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
+                    var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                    if (result.Succeeded)
+                    {
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, user.Id),
+                            new Claim(ClaimTypes.Name, user.UserName),
+                            new Claim(ClaimTypes.Email, user.Email),
+                            new Claim("FirstName", user.FirstName ?? string.Empty),
+                        };
+
+                        var roles = await _userManager.GetRolesAsync(user);
+
+                        foreach (var role in roles) 
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role, role));
+                        }
+
+                        claims.ForEach(claim => _logger.LogInformation(claim.ToString()));
+                        claims.ForEach(c => _logger.LogInformation($"Claim type: {c.Type} - Claim value: {c.Value}"));
+
+                        var claimsIdentity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
+                        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+                        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                        await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, claimsPrincipal, new AuthenticationProperties { IsPersistent = Input.RememberMe });
+
+                        _logger.LogInformation("User logged in.");
+                        return returnUrl != null ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Car");
+                    }
+                    // ... handle other cases like lockout, 2FA, etc.
                 }
                 else
                 {
@@ -137,5 +161,6 @@ namespace Cars.Areas.Identity.Pages.Account
             // If we got this far, something failed, redisplay form
             return Page();
         }
+
     }
 }

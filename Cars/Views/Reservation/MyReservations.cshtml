@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Cars.Models.Reservation>
+﻿@model MyReservationsViewModel
 
 @{
     ViewData["Title"] = "MyReservations";
@@ -6,60 +6,114 @@
 
 <h1>MyReservations</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<h2>Upcoming Reservations</h2>
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.CarId)
+                @Html.DisplayNameFor(model => model.UpcomingReservations.First().Car.Brand)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CustomerName)
+                @Html.DisplayNameFor(model => model.UpcomingReservations.First().Car.Model)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ReservationDate)
+                @Html.DisplayNameFor(model => model.UpcomingReservations.First().ReservationDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.PickupDate)
+                @Html.DisplayNameFor(model => model.UpcomingReservations.First().PickupDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ReturnDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
+                @Html.DisplayNameFor(model => model.UpcomingReservations.First().ReturnDate)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CarId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CustomerName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReservationDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PickupDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReturnDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.User.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ReservationId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ReservationId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ReservationId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.UpcomingReservations)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Car.Brand)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Car.Model)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReservationDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PickupDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReturnDate)
+                </td>
+                <td>
+                    @Html.ActionLink("Delete", "Delete", new { ReservationId = item.ReservationId }, new { @class = "btn btn-danger" })
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+<button id="toggleButton" class="btn btn-info" onclick="togglePastReservations()">Show Past Reservations</button>
+<div id="pastReservations" style="display:none;">
+    <h2>Past Reservations</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.PastReservations.First().Car.Brand)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PastReservations.First().Car.Model)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PastReservations.First().ReservationDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PastReservations.First().PickupDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PastReservations.First().ReturnDate)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.PastReservations)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Car.Brand)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Car.Model)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ReservationDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PickupDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ReturnDate)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+    <script>
+        function togglePastReservations() {
+            var pastReservations = document.getElementById("pastReservations");
+            var button = document.getElementById("toggleButton");
+            if (pastReservations.style.display === "none") {
+                pastReservations.style.display = "block";
+                button.textContent = "Hide Past Reservations";
+            } else {
+                pastReservations.style.display = "none";
+                button.textContent = "Show Past Reservations";
+            }
+        }
+    </script>
+}
