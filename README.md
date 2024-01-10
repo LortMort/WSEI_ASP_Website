@@ -1,11 +1,11 @@
 Installed packets:
-    "Microsoft.AspNetCore.Identity.EntityFrameworkCore" (6.0.23)
-    "Microsoft.AspNetCore.Identity.UI" (6.0.23)
-    "Microsoft.EntityFrameworkCore" (6.0.25)
-    "Microsoft.EntityFrameworkCore.Sqlite" (6.0.25)
-    "Microsoft.EntityFrameworkCore.SqlServer" (6.0.25)
-    "Microsoft.EntityFrameworkCore.Tools" (6.0.25)
-    "Microsoft.VisualStudio.Web.CodeGeneration.Design" (6.0.16)
+- "Microsoft.AspNetCore.Identity.EntityFrameworkCore" (6.0.23)
+- "Microsoft.AspNetCore.Identity.UI" (6.0.23)
+- "Microsoft.EntityFrameworkCore" (6.0.25)
+- "Microsoft.EntityFrameworkCore.Sqlite" (6.0.25)
+- "Microsoft.EntityFrameworkCore.SqlServer" (6.0.25)
+- "Microsoft.EntityFrameworkCore.Tools" (6.0.25)
+- "Microsoft.VisualStudio.Web.CodeGeneration.Design" (6.0.16)
 
 Before Running project check appsettings.json and create database with the same name as in this file (probably "CarsWSEI")
 After creating this database, write 2 commands in Console Packet Manager:
