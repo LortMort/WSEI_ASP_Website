@@ -15,7 +15,10 @@ public static class IdentityDataInitializer
         {
             await roleManager.CreateAsync(new IdentityRole("Admin"));
         }
-        await roleManager.CreateAsync(new IdentityRole("User"));
+        if (!await roleManager.RoleExistsAsync("User"))
+        {
+            await roleManager.CreateAsync(new IdentityRole("User"));
+        }
     }
 
     private static async Task SeedAdminUser(UserManager<ApplicationUser> userManager)
@@ -24,7 +27,7 @@ public static class IdentityDataInitializer
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
-            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail };
+            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, FirstName = "Admin", LastName = "Admin", EmailConfirmed = true};
             await userManager.CreateAsync(adminUser, "AdminPassword123!");
         }
 

@@ -63,7 +63,6 @@ namespace Cars.Controllers
             CarToEdit.Model = car.Model;
             CarToEdit.Type = car.Type;
             CarToEdit.Power = car.Power;
-            CarToEdit.Avalibity = car.Avalibity;
             _context.Update(CarToEdit);
             _context.SaveChanges();
             return RedirectToAction(nameof(Index));

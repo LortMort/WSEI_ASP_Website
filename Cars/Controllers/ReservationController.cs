@@ -22,9 +22,12 @@ namespace Cars.Controllers
         }
 
         // GET: Reservation
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
-            return View(_context.Reservations);
+            var reservations = _context.Reservations.Include(r => r.Car).ToList();
+            
+            return View(reservations);
         }
 
         public async Task<IActionResult> Reserve(int carId, string carName)
@@ -140,14 +143,18 @@ namespace Cars.Controllers
         }
 
         [Authorize]
-        public ActionResult Delete(int ReservationId)
+        public async Task<IActionResult> Delete(int ReservationId)
         {
             var reservationToDelete = _context.Reservations
                                               .Include(r => r.Car)
+                                              .Include(r => r.User)
                                               .FirstOrDefault(r => r.ReservationId == ReservationId);
+            System.Diagnostics.Debug.WriteLine($"reservation {ReservationId}");
 
             var currentUserId = _userManager.GetUserId(User);
-            if (reservationToDelete.UserId != currentUserId)
+            var isAdmin = await _userManager.IsInRoleAsync(await _userManager.GetUserAsync(User), "Admin");
+
+            if (reservationToDelete.UserId != currentUserId && !isAdmin )
             {
                 System.Diagnostics.Debug.WriteLine($"Unauthorized delete attempt by user {currentUserId} on reservation {ReservationId}");
                 return Unauthorized();

@@ -2,58 +2,37 @@
 
 @{
     ViewData["Title"] = "Index";
+    var groupedReservations = Model.GroupBy(r => r.Car).ToList();
 }
 
-<h1>Index</h1>
+<h1>All Reservations</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CarId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CustomerName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ReservationDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PickupDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ReturnDate)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CarId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CustomerName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReservationDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PickupDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReturnDate)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ReservationId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ReservationId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ReservationId">Delete</a>
-            </td>
-        </tr>
+@foreach (var carGroup in groupedReservations)
+{
+    <h2>@carGroup.Key.Brand @carGroup.Key.Model: All Upcoming Reservations</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Reservation Date</th>
+                <th>Pickup Date</th>
+                <th>Return Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reservation in carGroup)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => reservation.CustomerName)</td>
+                    <td>@Html.DisplayFor(modelItem => reservation.ReservationDate)</td>
+                    <td>@Html.DisplayFor(modelItem => reservation.PickupDate)</td>
+                    <td>@Html.DisplayFor(modelItem => reservation.ReturnDate)</td>
+                    <td>
+                        @Html.ActionLink("Delete", "Delete", new{ReservationId=reservation.ReservationId},new {@class="btn btn-danger"})
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
-    </tbody>
-</table>

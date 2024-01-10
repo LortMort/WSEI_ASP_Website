@@ -27,8 +27,5 @@ namespace Cars.Models
 
         [Column(TypeName = "int")]
         public int Power { get; set; }
-
-        [Column(TypeName = "bit")]
-        public bool Avalibity { get; set; }
     }
 }
