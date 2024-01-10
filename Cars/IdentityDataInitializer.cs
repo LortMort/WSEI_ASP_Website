@@ -7,6 +7,7 @@ public static class IdentityDataInitializer
     {
         await SeedRoles(roleManager);
         await SeedAdminUser(userManager);
+        await SeedTestUser(userManager);
     }
 
     private static async Task SeedRoles(RoleManager<IdentityRole> roleManager)
@@ -34,6 +35,22 @@ public static class IdentityDataInitializer
         if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
         {
             await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
+
+    private static async Task SeedTestUser(UserManager<ApplicationUser> userManager)
+    {
+        var userEmail = "test@test.pl";
+        var testUser = await userManager.FindByEmailAsync(userEmail);
+        if (testUser == null)
+        {
+            testUser = new ApplicationUser { UserName = userEmail, Email = userEmail, FirstName = "Jhon", LastName = "Test", EmailConfirmed = true };
+            await userManager.CreateAsync(testUser, "Password123!");
+        }
+
+        if (!await userManager.IsInRoleAsync(testUser, "User"))
+        {
+            await userManager.AddToRoleAsync(testUser, "User");
         }
     }
 }
