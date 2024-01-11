@@ -11,6 +11,7 @@ Before Running project check appsettings.json and create database with the same 
 After creating this database, write 2 commands in Console Packet Manager:
 1) Add-Migration "Initial Create"
 2) Update-Database
+
 Roles and Admin User will add itself automatically (IdentityDataInitializer.cs)
 
 Admin user data:
