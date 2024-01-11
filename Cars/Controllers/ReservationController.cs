@@ -25,7 +25,7 @@ namespace Cars.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
-            var reservations = _context.Reservations.Include(r => r.Car).ToList();
+            var reservations = _context.Reservations.Include(r => r.Car).Where(r => r.ReturnDate > DateTime.Now).ToList();
             
             return View(reservations);
         }
