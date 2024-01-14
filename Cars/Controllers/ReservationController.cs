@@ -35,9 +35,8 @@ namespace Cars.Controllers
             ViewBag.CarId = carId;
             ViewBag.CarName = carName;
 
-            var now = DateTime.Today; // Current date and time
+            var now = DateTime.Now; // Current date and time
             var oneWeekLater = DateTime.Today.AddDays(8);
-            System.Diagnostics.Debug.WriteLine(DateTime.Today);
 
             var reservationsForCar = await _context.Reservations
                                           .Include(r => r.Car)
