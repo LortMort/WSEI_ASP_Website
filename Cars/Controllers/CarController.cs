@@ -56,9 +56,9 @@ namespace Cars.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int carId, Car car)
+        public ActionResult Edit(Car car)
         {
-            var CarToEdit = _context.Cars.Find(carId);
+            var CarToEdit = _context.Cars.Find(car.Id);
             CarToEdit.Brand = car.Brand;
             CarToEdit.Model = car.Model;
             CarToEdit.Type = car.Type;
